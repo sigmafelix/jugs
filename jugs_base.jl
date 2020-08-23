@@ -159,22 +159,28 @@ st_intersects(state, county)
 
 
 function MoranI(q, w)
-    denom = q'*w*q
-    nom = q'*q
-    nf = size(w)[1]
-    expectation = -1/size(w)[1]
-    wcross2 = 0.5 * sum((w+w') .^ 2)
-    wcrosssum = nf * (sum(sum(w+w', dims = 2) .^ 2))
-    wijsq = sum(w)^2
-    qbar = sum(q)/nf
-    s1 = (nf^2 - 3*nf + 3) * wcross2 - wcrosssum + (3*wijsq)
-    s2 = ((1/nf)*sum((q.-qbar).^4)) / ((1/nf)*sum((q.-qbar).^2)^2) 
-    s3 = wcross2 - (2*nf*wcross2) + 6*wijsq
-    vI = ((nf * s1) - (s2 * s3)) / ((nf-1)*(nf-2)*(nf-3)*wijsq)
-    I = denom/nom
+    qt = q .- (sum(q)/size(q)[1])
     
-    (I, expectation, vI)
+    denom = qt'*w*qt
+    nom = qt'*qt
+    nf = size(w)[1]
+    expectation = -1/(size(w)[1]-1)
+    I = (nf/sum(w)) * (denom/nom)
+    
+    s1 = 0.5 * sum((w+w') .^ 2)
+    s2 = sum(sum((w+w'), dims = 2) .^ 2)
+    wijsq = sum(w)^2
+    qbar = sum(qt)/nf
+    s3 = ((1/nf)*sum((qt.-qbar).^4)) / (((1/nf)*sum((qt.-qbar).^2))^2 )
+    s4 = ((nf^2 - (3*nf) + 3) * s1) - (nf * s2) + (3*wijsq)
+    s5 = ((nf^2 - nf) * s1) - (2*nf*s2) + (6*wijsq)
+    vI = ((nf * s4) - (s3 * s5)) / ((nf-1)*(nf-2)*(nf-3)*wijsq)
+    vIfin = vI - (expectation^2)
+    
+    
+    (I, expectation, vIfin)
 end
 
 MoranI(state.AWATER, check1)
-MoranI(county.AWATER, check2)
+MoranI(county.AWATER ./ 1e6, check2)
+sum(check2)
